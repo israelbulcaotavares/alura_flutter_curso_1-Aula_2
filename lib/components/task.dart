@@ -1,18 +1,26 @@
 import 'package:alura_flutter_curso_1/components/difficulty.dart';
+import 'package:alura_flutter_curso_1/data/task_dao.dart';
 import 'package:flutter/material.dart';
 
 class Task extends StatefulWidget {
   final String nome;
   final String foto;
   final int dificuldade;
+  int nivel = 0;
 
-  const Task(this.nome, this.foto, this.dificuldade, {super.key});
+  Task(this.nome, this.foto, this.dificuldade, {super.key});
 
   @override
   State<Task> createState() => _TaskState();
 }
+
 class _TaskState extends State<Task> {
-  int nivel = 0;
+  bool assetOrNetwork() {
+    if (widget.foto.contains('http')) {
+      return false;
+    }
+    return true;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -47,10 +55,15 @@ class _TaskState extends State<Task> {
                       height: 100,
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(4),
-                        child: Image.asset(
-                          widget.foto,
-                          fit: BoxFit.cover,
-                        ),
+                        child: assetOrNetwork()
+                            ? Image.asset(
+                                widget.foto,
+                                fit: BoxFit.cover,
+                              )
+                            : Image.network(
+                                widget.foto,
+                                fit: BoxFit.cover,
+                              ),
                       ),
                     ),
                     Column(
@@ -72,9 +85,13 @@ class _TaskState extends State<Task> {
                       width: 52,
                       height: 52,
                       child: ElevatedButton(
+                          onLongPress: () {
+                            TaskDAO().delete(widget.nome);
+                          },
                           onPressed: () {
+                            print(widget.nivel);
                             setState(() {
-                              nivel++;
+                              widget.nivel++;
                             });
                           },
                           child: const Column(
@@ -102,7 +119,7 @@ class _TaskState extends State<Task> {
                       child: LinearProgressIndicator(
                         color: Colors.white,
                         value: (widget.dificuldade > 0)
-                            ? (nivel / widget.dificuldade) / 10
+                            ? (widget.nivel / widget.dificuldade) / 10
                             : 1,
                       ),
                     ),
@@ -110,7 +127,7 @@ class _TaskState extends State<Task> {
                   Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: Text(
-                      'Nível: $nivel',
+                      'Nível: ${widget.nivel}',
                       style: const TextStyle(color: Colors.white),
                     ),
                   ),

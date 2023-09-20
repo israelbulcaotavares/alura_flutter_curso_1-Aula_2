@@ -1,4 +1,7 @@
 import 'package:alura_flutter_curso_1/components/task.dart';
+import 'package:alura_flutter_curso_1/data/task_dao.dart';
+import 'package:alura_flutter_curso_1/data/task_inherited.dart';
+import 'package:alura_flutter_curso_1/screen/form_screen.dart';
 import 'package:flutter/material.dart';
 
 class InitialScreen extends StatefulWidget {
@@ -16,32 +19,94 @@ class _InitialScreenState extends State<InitialScreen> {
     return Scaffold(
       appBar: AppBar(
         leading: Container(),
+        actions: [
+          IconButton(
+            onPressed: () {
+              setState(() {});
+            },
+            icon: Icon(Icons.refresh),
+          ),
+        ],
         title: const Text('Tarefas'),
       ),
-      body: AnimatedOpacity(
-        opacity: opacidade ? 1 : 0,
-        duration: const Duration(milliseconds: 800),
-        child: ListView(
-          children: const [
-            Task('Aprender Flutter', 'assets/images/dash.png', 3),
-            Task('Andar de Bike', 'assets/images/bike.webp', 2),
-            Task('Meditar', 'assets/images/meditar.jpeg', 4),
-            Task('Ler', 'assets/images/livro.jpg', 1),
-            Task('Jogar',
-                'assets/images/jogar.jpg', 5),
-            SizedBox(
-              height: 100,
-            ),
-          ],
-        ),
+      body: Padding(
+        padding: EdgeInsets.only(top: 8, bottom: 70),
+        child: FutureBuilder<List<Task>>(
+            future: TaskDAO().findAll(),
+            builder: (context, snapshot) {
+              List<Task>? items = snapshot.data;
+              switch (snapshot.connectionState) {
+                case ConnectionState.none:
+                  return Center(
+                    child: Column(
+                      children: [
+                        CircularProgressIndicator(),
+                        Text('Carregando')
+                      ],
+                    ),
+                  );
+                  break;
+                case ConnectionState.waiting:
+                  return Center(
+                    child: Column(
+                      children: [
+                        CircularProgressIndicator(),
+                        Text('Carregando')
+                      ],
+                    ),
+                  );
+                  break;
+                case ConnectionState.active:
+                  return Center(
+                    child: Column(
+                      children: [
+                        CircularProgressIndicator(),
+                        Text('Carregando')
+                      ],
+                    ),
+                  );
+                  break;
+                case ConnectionState.done:
+                  if (snapshot.hasData && items != null) {
+                    if (items.isNotEmpty) {
+                      return ListView.builder(
+                          itemCount: items.length,
+                          itemBuilder: (BuildContext context, int index) {
+                            final Task tarefa = items[index];
+                            return tarefa;
+                          });
+                    }
+                    return Center(
+                      child: Column(
+                        children: [
+                          Icon(Icons.error_outline, size: 128),
+                          Text(
+                            'Não há nenhuma tarefa',
+                            style: TextStyle(fontSize: 32),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+                  return Text(' Erro ao carregar Tarefas ');
+              }
+              return Text('Erro desconhecido');
+            }),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          setState(() {
-            opacidade = !opacidade;
-          });
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (contextNew) => FormScreen(
+                taskContext: context,
+              ),
+            ),
+          ).then((value) => setState(() {
+                print('Recarregando a tela inicial');
+              }));
         },
-        child: const Icon(Icons.remove_red_eye),
+        child: const Icon(Icons.add),
       ),
     );
   }
